@@ -1,0 +1,408 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="es">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>Resultados - Radar de Percepci\'f3n M&P</title>\
+    <script src="https://cdn.tailwindcss.com"></script>\
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>\
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">\
+    <style>\
+        body \{\
+            font-family: 'Montserrat', sans-serif;\
+        \}\
+        .mp-blue \{\
+            background-color: #14213D;\
+        \}\
+        .mp-yellow \{\
+            background-color: #FCA311;\
+        \}\
+        .mp-blue-text \{\
+            color: #14213D;\
+        \}\
+        .mp-yellow-text \{\
+            color: #FCA311;\
+        \}\
+        .thermometer \{\
+            position: relative;\
+            width: 60px;\
+            height: 200px;\
+            background: #e0e0e0;\
+            border-radius: 20px;\
+            margin: 0 auto;\
+            overflow: hidden;\
+        \}\
+        .thermometer-fill \{\
+            position: absolute;\
+            bottom: 0;\
+            width: 100%;\
+            background: linear-gradient(to top, #ff4d4d, #ff9966);\
+            border-radius: 20px;\
+            transition: height 1s ease-in-out;\
+        \}\
+        .thermometer-bulb \{\
+            position: absolute;\
+            bottom: -20px;\
+            left: 50%;\
+            transform: translateX(-50%);\
+            width: 80px;\
+            height: 80px;\
+            background: #ff4d4d;\
+            border-radius: 50%;\
+        \}\
+    </style>\
+</head>\
+<body class="bg-gray-50">\
+    <header class="mp-blue text-white p-4 md:p-6">\
+        <div class="container mx-auto flex justify-between items-center">\
+            <div class="flex items-center">\
+                <h1 class="text-xl md:text-2xl font-bold">Radar de Percepci\'f3n Digital</h1>\
+                <span class="mp-yellow text-mp-blue text-xs md:text-sm font-bold ml-2 px-2 py-1 rounded">by M&P</span>\
+            </div>\
+            <nav>\
+                <ul class="flex space-x-4">\
+                    <li><a href="/" class="hover:mp-yellow-text text-sm md:text-base">Inicio</a></li>\
+                    <li><a href="#recommendations" class="hover:mp-yellow-text text-sm md:text-base">Recomendaciones</a></li>\
+                    <li><a href="#contact" class="hover:mp-yellow-text text-sm md:text-base">Contacto</a></li>\
+                </ul>\
+            </nav>\
+        </div>\
+    </header>\
+\
+    <main class="container mx-auto py-8 md:py-12 px-4">\
+        <section class="mb-8 text-center">\
+            <h2 class="text-2xl md:text-4xl font-bold mp-blue-text mb-2">Resultados del An\'e1lisis de Percepci\'f3n</h2>\
+            <p class="text-lg mb-2">Marca: <span class="font-bold">\{\{ results.brand \}\}</span></p>\
+            <p class="text-sm text-gray-600">An\'e1lisis realizado el \{\{ now().strftime('%d/%m/%Y') \}\}</p>\
+        </section>\
+\
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">\
+            <!-- Score Card -->\
+            <div class="bg-white rounded-lg shadow-lg p-6 text-center">\
+                <h3 class="text-xl font-semibold mp-blue-text mb-4">Score de Percepci\'f3n</h3>\
+                <div class="flex items-center justify-center mb-4">\
+                    <div class="thermometer">\
+                        <div class="thermometer-fill" id="thermometerFill" style="height: 0%;"></div>\
+                        <div class="thermometer-bulb"></div>\
+                    </div>\
+                    <div class="ml-6 text-5xl font-bold mp-blue-text" id="scoreNumber">0</div>\
+                </div>\
+                <p class="text-sm mt-4">\
+                    \{% if results.score >= 80 %\}\
+                    Excelente percepci\'f3n digital\
+                    \{% elif results.score >= 60 %\}\
+                    Buena percepci\'f3n digital\
+                    \{% elif results.score >= 40 %\}\
+                    Percepci\'f3n digital promedio\
+                    \{% else %\}\
+                    Percepci\'f3n digital en riesgo\
+                    \{% endif %\}\
+                </p>\
+                <div class="mt-4 p-3 bg-gray-50 rounded-md">\
+                    <p class="text-sm italic">"Tu marca est\'e1 en el percentil \{\{ results.score \}\} de la distribuci\'f3n estad\'edstica."</p>\
+                </div>\
+            </div>\
+            \
+            <!-- Sentiment Distribution -->\
+            <div class="bg-white rounded-lg shadow-lg p-6">\
+                <h3 class="text-xl font-semibold mp-blue-text mb-4">Distribuci\'f3n de Sentimiento</h3>\
+                <div class="h-64">\
+                    <canvas id="sentimentChart"></canvas>\
+                </div>\
+                <div class="mt-4 text-sm text-center">\
+                    <p>Total de menciones analizadas: <span class="font-bold">\{\{ results.sentiment_distribution.positive + results.sentiment_distribution.neutral + results.sentiment_distribution.negative \}\}</span></p>\
+                </div>\
+            </div>\
+            \
+            <!-- Attribute Radar -->\
+            <div class="bg-white rounded-lg shadow-lg p-6">\
+                <h3 class="text-xl font-semibold mp-blue-text mb-4">Radar de Atributos</h3>\
+                <div class="h-64">\
+                    <canvas id="radarChart"></canvas>\
+                </div>\
+                <div class="mt-4 text-sm text-center">\
+                    <p>Innovaci\'f3n: <span class="font-bold">\{\{ results.attribute_radar.innovation \}\}</span>/100</p>\
+                    <p>Servicio: <span class="font-bold">\{\{ results.attribute_radar.service \}\}</span>/100</p>\
+                    <p>Reputaci\'f3n: <span class="font-bold">\{\{ results.attribute_radar.reputation \}\}</span>/100</p>\
+                    <p>Presencia Digital: <span class="font-bold">\{\{ results.attribute_radar.digital_presence \}\}</span>/100</p>\
+                </div>\
+            </div>\
+        </div>\
+\
+        <!-- Common Phrases -->\
+        <section class="bg-white rounded-lg shadow-lg p-6 mb-12">\
+            <h3 class="text-xl font-semibold mp-blue-text mb-6">Frases Destacadas</h3>\
+            <div class="space-y-4">\
+                \{% for phrase in results.common_phrases %\}\
+                <div class="p-4 border-l-4 border-gray-300 bg-gray-50 italic">\
+                    "\{\{ phrase \}\}"\
+                </div>\
+                \{% endfor %\}\
+            </div>\
+        </section>\
+\
+        <!-- Brand Comparison -->\
+        <section class="bg-white rounded-lg shadow-lg p-6 mb-12">\
+            <h3 class="text-xl font-semibold mp-blue-text mb-6">Comparaci\'f3n con Otras Marcas</h3>\
+            <div class="h-80">\
+                <canvas id="comparisonChart"></canvas>\
+            </div>\
+        </section>\
+\
+        <!-- Recommendations -->\
+        <section id="recommendations" class="bg-white rounded-lg shadow-lg p-6 mb-12">\
+            <h3 class="text-xl font-semibold mp-blue-text mb-6">Recomendaciones Estrat\'e9gicas</h3>\
+            <div class="space-y-6">\
+                \{% for recommendation in results.recommendations %\}\
+                <div class="flex items-start">\
+                    <div class="mp-yellow rounded-full w-6 h-6 flex items-center justify-center mt-1 flex-shrink-0">\
+                        <span class="text-white font-bold">\{\{ loop.index \}\}</span>\
+                    </div>\
+                    <div class="ml-3">\
+                        <p>\{\{ recommendation \}\}</p>\
+                    </div>\
+                </div>\
+                \{% endfor %\}\
+            </div>\
+            <div class="mt-8 p-4 bg-gray-50 rounded-md border border-gray-200">\
+                <p class="text-sm italic">"Cada menci\'f3n es un dato. Cada dato, una decisi\'f3n."</p>\
+            </div>\
+        </section>\
+\
+        <!-- Mentions Table -->\
+        <section class="bg-white rounded-lg shadow-lg p-6 mb-12 overflow-x-auto">\
+            <h3 class="text-xl font-semibold mp-blue-text mb-6">\'daltimas Menciones</h3>\
+            <table class="min-w-full divide-y divide-gray-200">\
+                <thead class="bg-gray-50">\
+                    <tr>\
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fuente</th>\
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">T\'edtulo</th>\
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sentimiento</th>\
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>\
+                    </tr>\
+                </thead>\
+                <tbody class="bg-white divide-y divide-gray-200">\
+                    \{% for mention in results.mentions[:10] %\}\
+                    <tr>\
+                        <td class="px-6 py-4 whitespace-nowrap">\
+                            <div class="text-sm text-gray-900">\{\{ mention.source \}\}</div>\
+                        </td>\
+                        <td class="px-6 py-4">\
+                            <div class="text-sm text-gray-900">\
+                                <a href="\{\{ mention.url \}\}" target="_blank" class="hover:underline">\{\{ mention.title \}\}</a>\
+                            </div>\
+                        </td>\
+                        <td class="px-6 py-4 whitespace-nowrap">\
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full\
+                                \{% if mention.sentimiento == 'positivo' %\}\
+                                bg-green-100 text-green-800\
+                                \{% elif mention.sentimiento == 'neutro' %\}\
+                                bg-gray-100 text-gray-800\
+                                \{% else %\}\
+                                bg-red-100 text-red-800\
+                                \{% endif %\}\
+                            ">\
+                                \{\{ mention.sentimiento|capitalize \}\}\
+                            </span>\
+                        </td>\
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">\
+                            \{\{ mention.date \}\}\
+                        </td>\
+                    </tr>\
+                    \{% endfor %\}\
+                </tbody>\
+            </table>\
+        </section>\
+\
+        <!-- Actions -->\
+        <section class="flex flex-col md:flex-row gap-6 mb-12">\
+            <a href="/download_pdf" class="flex-1 text-center mp-blue text-white font-bold py-3 px-8 rounded-md hover:bg-opacity-90 transition-all transform hover:scale-105">\
+                Descargar Informe PDF\
+            </a>\
+            <a href="/" class="flex-1 text-center mp-yellow text-white font-bold py-3 px-8 rounded-md hover:bg-opacity-90 transition-all transform hover:scale-105">\
+                Analizar otra marca\
+            </a>\
+        </section>\
+\
+        <section id="contact" class="mt-16 text-center">\
+            <h3 class="text-2xl font-semibold mp-blue-text mb-4">\'bfNecesitas un an\'e1lisis m\'e1s profundo?</h3>\
+            <p class="mb-6">Cont\'e1ctanos para una reuni\'f3n personalizada con nuestro equipo de analistas.</p>\
+            <a href="https://wa.me/56992258137?text=Quiero%20analizar%20mi%20marca" target="_blank" class="inline-block mp-yellow text-white font-bold py-3 px-8 rounded-md hover:bg-opacity-90 transition-all transform hover:scale-105">\
+                Agendar reuni\'f3n\
+            </a>\
+        </section>\
+    </main>\
+\
+    <footer class="mp-blue text-white py-8 mt-16">\
+        <div class="container mx-auto px-4">\
+            <div class="flex flex-col md:flex-row justify-between">\
+                <div class="mb-6 md:mb-0">\
+                    <h4 class="text-lg font-bold mb-4">Radar de Percepci\'f3n Digital</h4>\
+                    <p class="text-sm">Desarrollado por M&P</p>\
+                </div>\
+                <div>\
+                    <h4 class="text-lg font-bold mb-4">Contacto</h4>\
+                    <p class="text-sm">contacto@mulleryperez.cl</p>\
+                    <p class="text-sm">+56 9 9225 8137</p>\
+                </div>\
+            </div>\
+            <div class="mt-8 text-center text-sm">\
+                <p>&copy; 2025 M\'fcller & P\'e9rez. Todos los derechos reservados.</p>\
+            </div>\
+        </div>\
+    </footer>\
+\
+    <!-- WhatsApp Floating Button -->\
+    <a href="https://wa.me/56992258137?text=Quiero%20analizar%20mi%20marca" target="_blank" class="fixed bottom-6 right-6 mp-yellow rounded-full w-14 h-14 flex items-center justify-center shadow-lg hover:scale-110 transition-transform z-50">\
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 24 24">\
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>\
+        </svg>\
+    </a>\
+\
+    <script>\
+        document.addEventListener('DOMContentLoaded', function() \{\
+            // Score Thermometer Animation\
+            const score = \{\{ results.score \}\};\
+            const thermometerFill = document.getElementById('thermometerFill');\
+            const scoreNumber = document.getElementById('scoreNumber');\
+            \
+            // Animate the score number\
+            let currentScore = 0;\
+            const duration = 2000; // 2 seconds\
+            const interval = 20; // Update every 20ms\
+            const steps = duration / interval;\
+            const increment = score / steps;\
+            \
+            const scoreInterval = setInterval(() => \{\
+                currentScore += increment;\
+                if (currentScore >= score) \{\
+                    currentScore = score;\
+                    clearInterval(scoreInterval);\
+                \}\
+                scoreNumber.textContent = Math.round(currentScore);\
+            \}, interval);\
+            \
+            // Animate the thermometer fill\
+            setTimeout(() => \{\
+                thermometerFill.style.height = score + '%';\
+            \}, 100);\
+            \
+            // Sentiment Distribution Chart\
+            const sentimentCtx = document.getElementById('sentimentChart').getContext('2d');\
+            const sentimentChart = new Chart(sentimentCtx, \{\
+                type: 'doughnut',\
+                data: \{\
+                    labels: ['Positivas', 'Neutras', 'Negativas'],\
+                    datasets: [\{\
+                        data: [\
+                            \{\{ results.sentiment_distribution.positive \}\}, \
+                            \{\{ results.sentiment_distribution.neutral \}\}, \
+                            \{\{ results.sentiment_distribution.negative \}\}\
+                        ],\
+                        backgroundColor: [\
+                            '#4ade80', // green\
+                            '#94a3b8', // gray\
+                            '#f87171'  // red\
+                        ],\
+                        borderWidth: 1\
+                    \}]\
+                \},\
+                options: \{\
+                    responsive: true,\
+                    maintainAspectRatio: false,\
+                    plugins: \{\
+                        legend: \{\
+                            position: 'bottom'\
+                        \}\
+                    \}\
+                \}\
+            \});\
+            \
+            // Attribute Radar Chart\
+            const radarCtx = document.getElementById('radarChart').getContext('2d');\
+            const radarChart = new Chart(radarCtx, \{\
+                type: 'radar',\
+                data: \{\
+                    labels: ['Innovaci\'f3n', 'Servicio', 'Reputaci\'f3n', 'Presencia Digital'],\
+                    datasets: [\{\
+                        label: '\{\{ results.brand \}\}',\
+                        data: [\
+                            \{\{ results.attribute_radar.innovation \}\},\
+                            \{\{ results.attribute_radar.service \}\},\
+                            \{\{ results.attribute_radar.reputation \}\},\
+                            \{\{ results.attribute_radar.digital_presence \}\}\
+                        ],\
+                        backgroundColor: 'rgba(252, 163, 17, 0.2)',\
+                        borderColor: '#FCA311',\
+                        borderWidth: 2,\
+                        pointBackgroundColor: '#14213D'\
+                    \}]\
+                \},\
+                options: \{\
+                    responsive: true,\
+                    maintainAspectRatio: false,\
+                    scales: \{\
+                        r: \{\
+                            angleLines: \{\
+                                display: true\
+                            \},\
+                            suggestedMin: 0,\
+                            suggestedMax: 100\
+                        \}\
+                    \}\
+                \}\
+            \});\
+            \
+            // Brand Comparison Chart\
+            const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');\
+            const comparisonData = \{\
+                labels: [\
+                    \{% for brand in results.comparison %\}\
+                    '\{\{ brand.marca \}\}',\
+                    \{% endfor %\}\
+                ],\
+                datasets: [\{\
+                    label: 'Score de Percepci\'f3n',\
+                    data: [\
+                        \{% for brand in results.comparison %\}\
+                        \{\{ brand.score \}\},\
+                        \{% endfor %\}\
+                    ],\
+                    backgroundColor: [\
+                        \{% for brand in results.comparison %\}\
+                        \{% if brand.marca == results.brand %\}\
+                        '#FCA311',\
+                        \{% else %\}\
+                        '#14213D',\
+                        \{% endif %\}\
+                        \{% endfor %\}\
+                    ],\
+                    borderWidth: 1\
+                \}]\
+            \};\
+            \
+            const comparisonChart = new Chart(comparisonCtx, \{\
+                type: 'bar',\
+                data: comparisonData,\
+                options: \{\
+                    responsive: true,\
+                    maintainAspectRatio: false,\
+                    scales: \{\
+                        y: \{\
+                            beginAtZero: true,\
+                            max: 100\
+                        \}\
+                    \}\
+                \}\
+            \});\
+        \});\
+    </script>\
+</body>\
+</html>}
